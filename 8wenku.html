@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title id="novel-name">A-C-G-N-小说</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css">
+	<script src="https://cdn.bootcss.com/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+    <style>
+        h4{
+            color: black
+        }
+        h5{
+            color:gray
+        }
+        .right-post{
+            overflow: auto;
+        }
+        .back_top{
+            opacity: 0.6;
+            position: fixed;
+            bottom: 40px;
+            right: 150px;
+        }
+        a{
+            text-decoration: none;
+        }
+        img{
+            max-width: 70%
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row text-center">
+           <h1>轻小说阅读</h1>
+            <div class="input-group col-md-4 col-md-offset-4">
+                <input type="text" name='name' list='all_items' class="form-control"/>
+                <datalist id="all_items"  class="all_items"></datalist>
+                <div class="input-group-btn">
+                        <button class="btn btn-primary" onclick="search()">搜索</button>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div class="row  novel_show">
+            <div class="col-md-4 left-desc">
+                <div class="row novel_info" >
+                    <div class="desc panel panel-default">
+                        <h2 id="title" class="panel-heading"></h2>
+                        <h3><small id="info"  class="panel-heading"></small></h3>
+                        <p id="desc" class="panel-body"></p>
+                    </div>
+                    <hr/>
+                    <div id="content" class="col-xs-offset-1">
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8 right-post">
+                    <div id="post" class=" bg-warning" style="padding:15px">
+                    </div>
+            </div>
+        </div>
+    </div>
+    <div class="back_top" onclick="back_top()">
+            <a href="javascript:scrollTo(0,0);"><h3><span class="glyphicon glyphicon-arrow-up"></span>返回到顶部
+             </h3></a>
+         </div>
+</body>
+<script>
+    $.ajax({
+            url:"all.json",
+            success:function(data){
+                if(data){
+                    alljson=data;
+                    for(var i in data){
+                        xname=i.replace(/\.json/,'');
+                        xname=xname.replace(/《/,'');
+                        xname=xname.replace(/》/,'');
+                        $(".all_items").append("<option class='items'>"+xname+"</option>")
+                        
+                    }
+
+                }
+            }
+        })
+        $(".novel_show").hide()
+    function achieve_novel(name){
+        novel=''
+        $.ajax({
+            url:"json/《"+name+"》.json",
+            success:function(data){
+                if(data){
+                    // console.log(data.title)
+                    $(".novel_show").show()
+                    novel_info(data);
+                    novel=data;
+                }else{
+                    alert("无该小说")
+                    $(".novel_show").hide()
+                }
+            },
+            error:function(data){
+                alert("无该小说")
+            }
+        })
+    }
+    function novel_info(data){
+        $("#title").text(data.title)
+        $("#info").text(data.state+" "+data.time+" "+data.count+" "+data.id)
+        $("#desc").text(data.desc)
+        $("#content").html("")
+        $("#post").html("")
+        for(var i in data.content){
+            var juan=$("<div class='juan' data-juan='"+i+"'  ></div>")
+            juan.append("<h4>"+i+"</h4>")
+            for(x in data.content[i]){
+               juan.append("<h5 onclick='read(this)' style='padding-left:15px' data-juan='"+i+"' data-juan-x="+x+">"+data.content[i][x].title+"</h5>")
+                // $("#content").append("<p>"+data.content[i][x].post+"</p>")
+            }
+            $("#content").append(juan)
+        }
+        $("#novel-name").text("轻小说:"+data.title)
+        $("[name='name']").val(data.title)
+        if($(document).height()>$(".left-desc").height()){
+            $(".right-post").height($(document).height())
+        }else{
+            $(".right-post").height($(".left-desc").height())
+
+        }
+    }
+    function read(e){
+        var juan=$(e).attr('data-juan')
+        var juan_x=$(e).attr('data-juan-x')
+        $(".text-danger").addClass('text-info')//已经阅读
+        $(".text-danger").removeClass('text-danger')
+        $(e).addClass('text-danger')
+        var post=novel.content[juan][juan_x]['post']
+        post=rep(post)
+        $("#post").html(post)
+    }
+    function rep(data){
+        data=data.replace(/轻小说文库\(http:\/\/www\.wenku8\.com\)/ig,'')
+        data=data.replace(/轻小说文库\(http:\/\/www\.8wenku\.com\)/ig,'')
+        data=data.replace(/本文来自/,'本文来自轻小说')
+        return data.replace(/\d+\.\d+;\d+/,'')
+    }
+    function back_top(){
+        $('html').animate({ scrollTop: 0 }, 1000);
+    }
+    function search(){
+        name=$("[name='name']").val()
+        achieve_novel(name)
+    }
+</script>
+</html>
